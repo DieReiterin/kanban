@@ -1,6 +1,6 @@
 #  Frontend часть канбан-системы для работы с карточками продуктов
 
-<img width="603" alt="kanban" src="https://github.com/DieReiterin/kanban/tree/main/src/assets/kanban__draft.png">
+<img width="603" alt="kanban" src="https://github.com/DieReiterin/kanban/blob/main/src/assets/kanban__draft.png">
 
 
 ## Демо
