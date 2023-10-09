@@ -1,0 +1,229 @@
+<template>
+    <div ref="card" class="card" @mousedown="(e)=>cardMousedown(e)" @mousemove="(e)=>cardMousemove(e)" @mouseup.capture="cardMouseup()" :style="`background-color:${edit ? 'lightcoral' : 'white'}`">
+        <div class="card__header" :style="`background-color: ${currentColor}`">
+          <p class="card__header-title">{{ card.title }}</p>
+          <div class="card__btns">
+            <button class="card__btn" @click="toggleEdit()" :style="`background-color:${edit ? 'green' : 'blue'}`" v-show="showDetails">{{ edit ? 'Save' : 'Edit'}}</button>
+            <button class="card__btn" @click="deleteCard(card.id)">Delete</button>
+          </div>
+        </div>
+        <div class="card__center">
+          
+          <div class="card__rating">
+            <p class="card__rate">Rate:{{ card.rating.rate }}</p>
+            <p class="card__count">(count:{{ card.rating.count }})</p>
+          </div>
+          <img class="card__img" :src="card.image"/>
+
+        </div>
+
+        <button class="card__btn" @click="toggleShowDetails()" :style="`background-color:${showDetails ? 'green' : 'blue'}`">Show details</button>
+
+        <div class="field" v-for="field in this.fields" v-if="showDetails">
+            <div class="card__row" v-if="notObject(card[field]) && field != 'image'">
+
+                <p class="card__row-title">{{ field+':' }}</p>
+                <p v-if="!edit" :key="field" class="card__row-textarea">{{ card[field] }}</p>
+                <input v-if="edit" :key="field+'_edit'" class="card__row-textarea" v-model="card[field]">
+
+            </div>
+        </div>
+
+    </div>
+</template>
+
+<script>
+import { storeProductsManager } from '@/store/index.js'
+import { columnTypes } from '@/constants/columns.js'
+export default {
+  props: ['card','currentColumn', 'currentColor'],
+  data(){
+    return {
+      move: false,
+      cardPositionTop: true,
+      cardPositionLeft: true,
+      edit: false,
+      afterEdit:false,
+      showDetails: false,
+      afterShowDetails:false,
+    }
+  },
+  setup(props){
+    const useStore = storeProductsManager();
+    const fields = Object.keys(props.card);
+    return {
+        useStore,
+        fields,
+    }
+  },
+    methods: {
+      toggleEdit(){
+        this.edit = !this.edit;
+        this.afterEdit = true
+      },
+      toggleShowDetails(){
+        this.showDetails = !this.showDetails;
+        this.afterShowDetails = true
+      },
+      notObject(item){
+        return typeof item != 'object'
+      },
+      cardMousedown(e) {
+        if (e.target.tagName === 'BUTTON' || e.target.tagName === 'IMG') {return}
+        if(!this.afterEdit){
+          const self = this
+          setTimeout(()=>{
+            self.move = true
+          },100)
+        } else {
+          const self = this
+          setTimeout(()=>{
+            self.afterEdit = false
+          },100)
+        }
+
+      
+      },
+      cardMousemove(e){
+        if (this.move && !this.edit && !this.afterEdit) {
+          const card = this.$refs['card']
+          const cardTop = card.offsetTop;
+          const cardLeft = card.offsetLeft;
+          const cardHeight = card.offsetHeight;
+          const cardWidth = card.offsetWidth;
+          const resultTop = (e.movementY + cardTop)
+          const resultLeft = (e.movementX + cardLeft) 
+          this.cardPositionTop = resultTop + (cardHeight/2);
+          this.cardPositionLeft = resultLeft + (cardWidth/2);
+          card.style.position = 'absolute';
+          card.style.top = resultTop+'px';
+          card.style.left = resultLeft+'px';
+        }
+        
+      },
+     async cardMouseup() {
+        if(this.move && !this.edit && !this.afterEdit) {
+          this.move = false
+          for(let i = 0;i<columnTypes.length;i++){
+            const col = this.useStore[columnTypes[i].type+'Size']
+           
+            if(await this.checkColumn(col,this.cardPositionLeft,this.cardPositionTop)){
+              if(this.currentColumn === columnTypes[i].type) this.$emit('refresh')
+              await this.changeColumn(this.currentColumn,columnTypes[i].type,this.card)
+              // this.$emit('refresh')              
+              return
+            }
+          }
+          this.$emit('refresh')
+        }
+      },
+     async changeColumn(old,target,card){
+        this.useStore[old] = this.useStore[old].filter(item=> item.id !== card.id)
+        this.useStore[target].push(card)
+      },
+     async checkColumn(size, x, y){
+        let trueTop = false;
+        let trueLeft = false;
+        if (size.top < y && size.top+size.height > y) trueTop = true
+        if (size.left < x && size.left+size.width > x) trueLeft = true
+        if(trueTop && trueLeft) return true
+         
+      },
+      deleteCard(cardId) {
+        this.useStore[this.currentColumn] = this.useStore[this.currentColumn].filter(item => item.id !== cardId)         
+      }
+    }
+}
+</script>
+
+<style scoped>
+.card {
+  display: flex;
+  flex-direction: column;
+  width: 300px;
+  min-height: 100px;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 15px;
+  background-color: #fff;
+}
+.card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 30px;
+  padding: 5px 5px;
+  border-radius: 5px;
+  background-color: rgb(155, 219, 245);
+}
+.card__header-title {
+  width: 60%;
+  font-size: 14px;
+}
+.card__center {
+  display: flex;
+  justify-content: space-between;
+}
+.card__img {
+  width: 50px;
+  height: 50px;
+  margin: 5px auto;
+}
+/* .field {
+  display: flex;
+  flex-direction: column;
+} */
+.card__row {
+  display: flex;
+  font-size: 14px;
+  font-weight: bold;
+  padding: 10px;
+  justify-content: space-between;    
+  background-color: #fff;
+  align-items: center;
+}
+.card__row-title {
+  text-transform: capitalize;
+
+}
+.card__row-textarea {
+  all: unset;
+  width: 200px;
+  word-break: break-word;
+  font-size: 10px;
+  background-color: transparent;
+  border: 1px solid lightgray
+}
+.card__rating {
+  display: flex;
+  align-items: center;
+  margin-left: 5px;
+}
+.card__rate {
+  font-size: 14px;
+  margin-right: 5px;
+  font-weight: bold;
+}
+.card__count {
+  font-size: 12px;
+}
+.card__btn {
+  all: unset;
+  min-width: 30px;
+  height: 20px;
+  margin: 5px 0;
+  padding: 0 5px;
+  font-size: 10px;
+  font-weight: bold;
+  text-align: center;
+  color: #fff;
+  font-family: Arial, Verdana, sans-serif;
+  border-radius: 5px;
+  background-color: rgb(42, 42, 255);
+  box-shadow: 0px 0px 5px black;;
+  cursor: pointer;
+}
+.card__btn:nth-child(2n) {
+  margin-left: 5px;
+}
+</style>
