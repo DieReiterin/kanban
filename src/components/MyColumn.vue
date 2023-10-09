@@ -2,7 +2,7 @@
     <div ref="column" class="column" 
     :style="`background-color: ${column.color}`"
     >
-        <button class="sort-btn" @click="sortColumn()">Sort</button>
+        <button class="sort-btn" @click="sortColumn()">Sort cards</button>
         <my-card 
             v-for="card in useStore[column.type]" 
             :card="card" 
@@ -66,7 +66,7 @@ export default {
 }
 .sort-btn{
     all: unset;
-    width: 30px;
+    min-width: 30px;
     height: 20px;
     margin-bottom:10px;
     padding: 0 5px;

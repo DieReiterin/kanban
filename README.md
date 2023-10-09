@@ -1,19 +1,11 @@
-# kanban
+#  Frontend часть канбан-системы для работы с карточками продуктов
 
-## Project setup
-```
-npm install
-```
+<img width="603" alt="kanban" src="https://github.com/DieReiterin/kanban/tree/main/src/assets/kanban__draft.png">
 
-### Compiles and hot-reloads for development
-```
-npm run serve
-```
 
-### Compiles and minifies for production
-```
-npm run build
-```
+## Демо
+https://kanban-beige-xi.vercel.app/
 
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+## Локальный запуск
+#### `npm run serve`
+#### `http://localhost:8080/`

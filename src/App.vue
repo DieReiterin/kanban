@@ -15,9 +15,10 @@ export default {
 
 <style>
 * {
-margin: 0;
-padding: 0;
-
+  -webkit-user-drag: none;
+  user-select: none;
+  margin: 0;
+  padding: 0;
 
 }
 </style>

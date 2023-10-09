@@ -1,5 +1,5 @@
 <template>
-    <div ref="card" class="card" @mousedown="(e)=>cardMousedown(e)" @mousemove="(e)=>cardMousemove(e)" @mouseup.capture="cardMouseup()" :style="`background-color:${edit ? 'lightcoral' : 'white'}`">
+    <div ref="card" class="card" @mousedown="(e)=>cardMousedown(e)" @mousemove="(e)=>cardMousemove(e)" @mouseup.capture="cardMouseup()" :style="`border:${edit ? '2px solid red' : 'none'}`">
         <div class="card__header" :style="`background-color: ${currentColor}`">
           <p class="card__header-title">{{ card.title }}</p>
           <div class="card__btns">
@@ -9,11 +9,25 @@
         </div>
         <div class="card__center">
           
+          <button v-show="this.columns[0].type !== currentColumn" class="card__btn"
+          @click="currentColumn === 'productsInProcess' ? this.changeColumn(currentColumn, this.columns[0].type,card) : this.changeColumn(currentColumn, this.columns[1].type,card)"
+          >{{ '<' }}</button>
+          <!-- <button>{{ this.columns[0].type === currentColumn }}</button> -->
+          
+
           <div class="card__rating">
             <p class="card__rate">Rate:{{ card.rating.rate }}</p>
             <p class="card__count">(count:{{ card.rating.count }})</p>
           </div>
           <img class="card__img" :src="card.image"/>
+
+          <button 
+          v-show="this.columns[columns.length - 1].type !== currentColumn" class="card__btn"
+          @click="currentColumn === 'productsInProcess' ? this.changeColumn(currentColumn, this.columns[2].type,card) : this.changeColumn(currentColumn, this.columns[1].type,card)"
+          >{{ '>' }}</button>
+          <!-- @click="console.log(currentColumn, this.columns[1].type,card)" -->
+          
+          <!-- @click="this.changeColumn(currentColumn, this.columns[1].type,card)" -->
 
         </div>
 
@@ -51,9 +65,11 @@ export default {
   setup(props){
     const useStore = storeProductsManager();
     const fields = Object.keys(props.card);
+    const columns = columnTypes;
     return {
         useStore,
         fields,
+        columns,
     }
   },
     methods: {
@@ -69,7 +85,7 @@ export default {
         return typeof item != 'object'
       },
       cardMousedown(e) {
-        if (e.target.tagName === 'BUTTON' || e.target.tagName === 'IMG') {return}
+        if (e.target.tagName === 'BUTTON') {return}
         if(!this.afterEdit){
           const self = this
           setTimeout(()=>{
@@ -110,7 +126,6 @@ export default {
             if(await this.checkColumn(col,this.cardPositionLeft,this.cardPositionTop)){
               if(this.currentColumn === columnTypes[i].type) this.$emit('refresh')
               await this.changeColumn(this.currentColumn,columnTypes[i].type,this.card)
-              // this.$emit('refresh')              
               return
             }
           }
@@ -119,7 +134,7 @@ export default {
       },
      async changeColumn(old,target,card){
         this.useStore[old] = this.useStore[old].filter(item=> item.id !== card.id)
-        this.useStore[target].push(card)
+        this.useStore[target].unshift(card)
       },
      async checkColumn(size, x, y){
         let trueTop = false;
@@ -163,21 +178,18 @@ export default {
 .card__center {
   display: flex;
   justify-content: space-between;
+  align-items: center;
 }
 .card__img {
   width: 50px;
   height: 50px;
   margin: 5px auto;
 }
-/* .field {
-  display: flex;
-  flex-direction: column;
-} */
 .card__row {
   display: flex;
   font-size: 14px;
   font-weight: bold;
-  padding: 10px;
+  margin: 5px;
   justify-content: space-between;    
   background-color: #fff;
   align-items: center;
@@ -209,9 +221,9 @@ export default {
 }
 .card__btn {
   all: unset;
-  min-width: 30px;
+  min-width: 10px;
   height: 20px;
-  margin: 5px 0;
+  margin: 5px;
   padding: 0 5px;
   font-size: 10px;
   font-weight: bold;
@@ -220,7 +232,7 @@ export default {
   font-family: Arial, Verdana, sans-serif;
   border-radius: 5px;
   background-color: rgb(42, 42, 255);
-  box-shadow: 0px 0px 5px black;;
+  box-shadow: 0px 0px 3px black;;
   cursor: pointer;
 }
 .card__btn:nth-child(2n) {
