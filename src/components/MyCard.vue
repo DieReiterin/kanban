@@ -1,5 +1,5 @@
 <template>
-    <div ref="card" class="card" @mousedown="(e)=>cardMousedown(e)"  @mouseup.capture="cardMouseup()" :style="`border:${edit ? '2px solid red' : 'none'}`">
+    <div ref="card" class="card" @mousedown="(e)=>cardMousedown(e)"  @mouseup.capture="(e)=>cardMouseup(e)" :style="`border:${edit ? '2px solid red' : 'none'}`">
       <div class="card__header" :style="`background-color: ${currentColor}`">
           <p class="card__header-title">{{ card.title }}</p>
           <div class="card__btns">
@@ -60,9 +60,6 @@ export default {
       edit: false,
       afterEdit:false,
       showDetails: false,
-      handler: (e) => {
-              this.cardMousemove(e);
-            }
     }
   },
   setup(props){
@@ -76,6 +73,9 @@ export default {
     }
   },
     methods: {
+      handler(e) {
+        this.cardMousemove(e);
+      },
       toggleEdit(){
         this.edit = !this.edit;
         this.afterEdit = true
@@ -94,7 +94,7 @@ export default {
             self.move = true;
             
             const desk = this.useStore.deskRef;
-            desk.addEventListener('mousemove', this.handler)
+            desk.addEventListener('mousemove', (e) => {this.handler(e)})
 
 
           },100)          
@@ -103,37 +103,40 @@ export default {
           setTimeout(()=>{
             self.afterEdit = false
           },100)
-        }
-
-      
+        }      
       },
       cardMousemove(e){
         if (this.move && !this.edit && !this.afterEdit) {
           const card = this.$refs['card'];
-          
-          const resultTop = (card.offsetTop + e.movementY);
-          const resultLeft = (card.offsetLeft + e.movementX);
-          
-          card.style.position = 'absolute';
-          card.style.top = resultTop+'px';
-          card.style.left = resultLeft+'px';
-          
-          this.cardPositionTop = resultTop + (card.offsetHeight / 2);
-          this.cardPositionLeft = resultLeft + (card.offsetWidth / 2);
+          if(card){
+            const cardTop = card.offsetTop;
+            const cardLeft = card.offsetLeft;
+  
+            const resultTop = (cardTop + e.movementY);
+            const resultLeft = (cardLeft + e.movementX);
+            
+            card.style.position = 'absolute';
+            card.style.top = resultTop+'px';
+            card.style.left = resultLeft+'px';
+            
+            this.cardPositionTop = resultTop + (card.offsetHeight / 2);
+            this.cardPositionLeft = resultLeft + (card.offsetWidth / 2);            
+          };          
         }
         
       },
-     async cardMouseup() {
-
-       this.move = false       
-
+     async cardMouseup(e) {
+      if (e.target.tagName === 'BUTTON') {return}
+      const desk = this.useStore.deskRef;
+      desk.removeEventListener('mousemove', (e) => {this.handler(e)})
+      this.move = false       
+      
         if(!this.edit && !this.afterEdit) {
           for(let i = 0;i<columnTypes.length;i++){
             const col = this.useStore[columnTypes[i].type+'Size']
            
             if(await this.checkColumn(col,this.cardPositionLeft,this.cardPositionTop)){
-              if(this.currentColumn === columnTypes[i].type) 
-              this.$emit('refresh')
+              if(this.currentColumn === columnTypes[i].type) this.$emit('refresh');              
               await this.changeColumn(this.currentColumn,columnTypes[i].type,this.card)
               return
             } 
@@ -141,10 +144,10 @@ export default {
           this.$emit('refresh')
         }
       },
-     async changeColumn(old,target,card){
-        this.useStore[old] = this.useStore[old].filter(item=> item.id !== card.id)
-        this.useStore[target].unshift(card)
-      },
+      async changeColumn(old,target,card){
+         this.useStore[old] = this.useStore[old].filter(item=> item.id !== card.id)
+         this.useStore[target].unshift(card)
+       },
      async checkColumn(size, x, y){
         let trueTop = false;
         let trueLeft = false;
@@ -211,7 +214,6 @@ export default {
   all: unset;
   box-sizing: content-box;
   width: 200px;
-  /* min-height: 5px; */
   word-break: break-word;
   font-size: 10px;
   background-color: transparent;
