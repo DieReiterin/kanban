@@ -19,6 +19,5 @@ export default {
   user-select: none;
   margin: 0;
   padding: 0;
-
 }
 </style>

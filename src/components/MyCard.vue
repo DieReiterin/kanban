@@ -1,6 +1,6 @@
 <template>
-    <div ref="card" class="card" @mousedown="(e)=>cardMousedown(e)" @mousemove="(e)=>cardMousemove(e)" @mouseup.capture="cardMouseup()" :style="`border:${edit ? '2px solid red' : 'none'}`">
-        <div class="card__header" :style="`background-color: ${currentColor}`">
+    <div ref="card" class="card" @mousedown="(e)=>cardMousedown(e)"  @mouseup.capture="cardMouseup()" :style="`border:${edit ? '2px solid red' : 'none'}`">
+      <div class="card__header" :style="`background-color: ${currentColor}`">
           <p class="card__header-title">{{ card.title }}</p>
           <div class="card__btns">
             <button class="card__btn" @click="toggleEdit()" :style="`background-color:${edit ? 'green' : 'blue'}`" v-show="showDetails">{{ edit ? 'Save' : 'Edit'}}</button>
@@ -10,9 +10,10 @@
         <div class="card__center">
           
           <button v-show="this.columns[0].type !== currentColumn" class="card__btn"
-          @click="currentColumn === 'productsInProcess' ? this.changeColumn(currentColumn, this.columns[0].type,card) : this.changeColumn(currentColumn, this.columns[1].type,card)"
+          @click="currentColumn === 'productsInProcess' ? 
+          this.changeColumn(currentColumn, this.columns[0].type,card) : 
+          this.changeColumn(currentColumn, this.columns[1].type,card)"
           >{{ '<' }}</button>
-          <!-- <button>{{ this.columns[0].type === currentColumn }}</button> -->
           
 
           <div class="card__rating">
@@ -23,29 +24,29 @@
 
           <button 
           v-show="this.columns[columns.length - 1].type !== currentColumn" class="card__btn"
-          @click="currentColumn === 'productsInProcess' ? this.changeColumn(currentColumn, this.columns[2].type,card) : this.changeColumn(currentColumn, this.columns[1].type,card)"
+          @click="currentColumn === 'productsInProcess' ? 
+          this.changeColumn(currentColumn, this.columns[2].type,card) : 
+          this.changeColumn(currentColumn, this.columns[1].type,card)"
           >{{ '>' }}</button>
-          <!-- @click="console.log(currentColumn, this.columns[1].type,card)" -->
-          
-          <!-- @click="this.changeColumn(currentColumn, this.columns[1].type,card)" -->
 
         </div>
 
-        <button class="card__btn" @click="toggleShowDetails()" :style="`background-color:${showDetails ? 'green' : 'blue'}`">Show details</button>
+        <button class="card__btn" 
+        @click="toggleShowDetails()" 
+        :style="`background-color:${showDetails ? 'green' : 'blue'}`">Show details</button>
 
         <div class="field" v-for="field in this.fields" v-if="showDetails">
             <div class="card__row" v-if="notObject(card[field]) && field != 'image'">
 
                 <p class="card__row-title">{{ field+':' }}</p>
                 <p v-if="!edit" :key="field" class="card__row-textarea">{{ card[field] }}</p>
-                <input v-if="edit" :key="field+'_edit'" class="card__row-textarea" v-model="card[field]">
+                <textarea v-if="edit" :key="field+'_edit'" class="card__row-textarea" v-model="card[field]"></textarea>
 
             </div>
         </div>
 
     </div>
 </template>
-
 <script>
 import { storeProductsManager } from '@/store/index.js'
 import { columnTypes } from '@/constants/columns.js'
@@ -59,7 +60,9 @@ export default {
       edit: false,
       afterEdit:false,
       showDetails: false,
-      afterShowDetails:false,
+      handler: (e) => {
+              this.cardMousemove(e);
+            }
     }
   },
   setup(props){
@@ -79,7 +82,6 @@ export default {
       },
       toggleShowDetails(){
         this.showDetails = !this.showDetails;
-        this.afterShowDetails = true
       },
       notObject(item){
         return typeof item != 'object'
@@ -87,12 +89,17 @@ export default {
       cardMousedown(e) {
         if (e.target.tagName === 'BUTTON') {return}
         if(!this.afterEdit){
-          const self = this
+          const self = this;
           setTimeout(()=>{
-            self.move = true
-          },100)
+            self.move = true;
+            
+            const desk = this.useStore.deskRef;
+            desk.addEventListener('mousemove', this.handler)
+
+
+          },100)          
         } else {
-          const self = this
+          const self = this;
           setTimeout(()=>{
             self.afterEdit = false
           },100)
@@ -102,32 +109,34 @@ export default {
       },
       cardMousemove(e){
         if (this.move && !this.edit && !this.afterEdit) {
-          const card = this.$refs['card']
-          const cardTop = card.offsetTop;
-          const cardLeft = card.offsetLeft;
-          const cardHeight = card.offsetHeight;
-          const cardWidth = card.offsetWidth;
-          const resultTop = (e.movementY + cardTop)
-          const resultLeft = (e.movementX + cardLeft) 
-          this.cardPositionTop = resultTop + (cardHeight/2);
-          this.cardPositionLeft = resultLeft + (cardWidth/2);
+          const card = this.$refs['card'];
+          
+          const resultTop = (card.offsetTop + e.movementY);
+          const resultLeft = (card.offsetLeft + e.movementX);
+          
           card.style.position = 'absolute';
           card.style.top = resultTop+'px';
           card.style.left = resultLeft+'px';
+          
+          this.cardPositionTop = resultTop + (card.offsetHeight / 2);
+          this.cardPositionLeft = resultLeft + (card.offsetWidth / 2);
         }
         
       },
      async cardMouseup() {
-        if(this.move && !this.edit && !this.afterEdit) {
-          this.move = false
+
+       this.move = false       
+
+        if(!this.edit && !this.afterEdit) {
           for(let i = 0;i<columnTypes.length;i++){
             const col = this.useStore[columnTypes[i].type+'Size']
            
             if(await this.checkColumn(col,this.cardPositionLeft,this.cardPositionTop)){
-              if(this.currentColumn === columnTypes[i].type) this.$emit('refresh')
+              if(this.currentColumn === columnTypes[i].type) 
+              this.$emit('refresh')
               await this.changeColumn(this.currentColumn,columnTypes[i].type,this.card)
               return
-            }
+            } 
           }
           this.$emit('refresh')
         }
@@ -200,7 +209,9 @@ export default {
 }
 .card__row-textarea {
   all: unset;
+  box-sizing: content-box;
   width: 200px;
+  /* min-height: 5px; */
   word-break: break-word;
   font-size: 10px;
   background-color: transparent;

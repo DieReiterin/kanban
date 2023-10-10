@@ -1,5 +1,5 @@
 <template>
-    <div class="desk" >
+    <div class="desk" ref="desk">
         <my-column 
           v-if="show" 
           v-for="column in columns" 
@@ -21,6 +21,9 @@ export default {
         show:true,
       }
     },
+    mounted() {
+      this.useStore.deskRef = this.$refs['desk'];
+    },
     setup() {
         const useStore = storeProductsManager()
         const columns = columnTypes
@@ -32,10 +35,10 @@ export default {
     },
     methods:{
       refresh(){
+        // const self = this;
         this.show = false
-        const self = this
         setTimeout(()=>{
-          self.show = true
+          this.show = true
         },100)
       }
     },

@@ -12,9 +12,7 @@
             :key="card.id"
         />   
     </div>
-
-</template>
-  
+</template>  
 <script>
 import MyCard from '@/components/MyCard.vue'
 import { storeProductsManager } from '@/store/index.js'
@@ -86,10 +84,11 @@ export default {
     align-items: center;
     width: 350px;
     min-height: 240px;
-    border-radius: 15px;
+    margin-bottom: 10px;    
     padding: 5px;
+    border-radius: 15px;
 }
 .column:not(:last-child) {
-    margin-right: 20px;    
+    margin-right: 20px;
 }
 </style>

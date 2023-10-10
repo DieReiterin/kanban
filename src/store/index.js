@@ -8,7 +8,8 @@ export const storeProductsManager = defineStore({
         productsDone: [],
         productsNewSize:{},
         productsInProcessSize:{},
-        productsDoneSize:{}
+        productsDoneSize:{},
+        deskRef: {},
     }),
     
 
