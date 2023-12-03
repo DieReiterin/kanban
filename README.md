@@ -1,4 +1,5 @@
-#  Frontend часть канбан-системы для работы с карточками продуктов
+# Pet #5
+# Канбан-доска с карточками продуктов
 
 <img width="603" alt="kanban" src="https://github.com/DieReiterin/kanban/blob/main/src/assets/kanban__draft.png">
 
